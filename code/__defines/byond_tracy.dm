@@ -8,24 +8,82 @@
 // 	prof_init()
 // 	. = ..()
 
+#ifndef PROF
+// Default automatic PROF detection.
+// On Windows, looks in the standard places for `prof.dll`.
+// On Linux, looks in `.`, `$LD_LIBRARY_PATH`, and `~/.byond/bin` for either of
+// `libprof.so` (preferred) or `prof` (old).
+
+/* This comment bypasses grep checks */ /var/__prof
+
+/proc/__detect_prof()
+	if (world.system_type == UNIX)
+		if (fexists("./libprof.so"))
+			// No need for LD_LIBRARY_PATH badness.
+			return __prof = "./libprof.so"
+		else if (fexists("./prof"))
+			// Old dumb filename.
+			return __prof = "./prof"
+		else if (fexists("[world.GetConfig("env", "HOME")]/.byond/bin/prof"))
+			// Old dumb filename in `~/.byond/bin`.
+			return __prof = "prof"
+		else
+			// It's not in the current directory, so try others
+			return __prof = "libprof.so"
+	else
+		return __prof = "prof"
+
+#define PROF (__prof || __detect_prof())
+#endif
+
+// Handle 515 call() -> call_ext() changes
+#if DM_VERSION >= 515
+#define PROF_CALL call_ext
+#else
+#define PROF_CALL call
+#endif
+
+GLOBAL_VAR_INIT(profiler_enabled, FALSE)
+
 /client/proc/profiler_start()
-	set name = "Start Tracy Profiler"
+	set name = "Tracy Profiler Start"
 	set category = "Debug"
-	set desc = "Starts the tracy profiler, which will await the client connection."
+	set desc = "Starts the tracy profiler and writes the data to the server's data directory."
+
+	if(!check_rights(R_HOST))
+		return
+
 	switch(alert("Are you sure? Tracy will remain active until the server restarts.", "Tracy Init", "No", "Yes"))
 		if("Yes")
 			prof_init()
+
+/client/proc/profiler_stop()
+	set name = "Tracy Profiler Stop"
+	set category = "Debug"
+	set desc = "Stop the tracy profiler."
+
+	if(!check_rights(R_HOST))
+		return
+
+	switch(alert("Are you sure?", "Tracy Stop", "No", "Yes"))
+		if("Yes")
+			prof_stop()
 
 /**
  * Starts Tracy
  */
 /proc/prof_init()
-	var/lib
+	var/init = PROF_CALL(PROF, "init")()
+	if("0" != init) CRASH("[PROF] init error: [init]")
+	GLOB.profiler_enabled = TRUE
 
-	switch(world.system_type)
-		if(MS_WINDOWS) lib = "prof.dll"
-		if(UNIX) lib = "libprof.so"
-		else CRASH("Tracy initialization failed: unsupported platform or DLL not found.")
+/**
+ * Stops Tracy
+ */
+/proc/prof_stop()
+	if(!GLOB.profiler_enabled)
+		return
 
-	var/init = CALL_EXT(lib, "init")()
-	if("0" != init) CRASH("[lib] init error: [init]")
+	var/destroy = PROF_CALL(PROF, "destroy")()
+	if("0" != destroy) CRASH("[PROF] destroy error: [destroy]")
+	GLOB.profiler_enabled = FALSE
