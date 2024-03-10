@@ -334,6 +334,7 @@ The slots that you can use are found in items_clothing.dm and are the inventory 
 			var/list/map_systems = GLOB.using_map.available_cultural_info[token]
 			available_cultural_info[token] = map_systems.Copy()
 
+
 		// [SIERRA-ADD] - EXPANDED_CULTURE_DESCRIPTOR - Вносит культуры из мода в список культур после всех возможных альтераций, чтобы предотвратить конфликты при добавлении оффами новых культур
 		if(extended_cultural_info[token])
 			available_cultural_info[token] |= extended_cultural_info[token]
@@ -430,7 +431,7 @@ The slots that you can use are found in items_clothing.dm and are the inventory 
 		post_organ_rejuvenate(organ_to_post_rejuvenate, create_organs_for)
 
 	create_organs_for.sync_organ_dna()
-
+/* ------------------------> code\modules\emotes\definitions\_species.dm
 /datum/species/proc/hug(mob/living/carbon/human/H,mob/living/target)
 
 	var/t_him = "them"
@@ -446,7 +447,7 @@ The slots that you can use are found in items_clothing.dm and are the inventory 
 	if(H != target)
 		H.update_personal_goal(/datum/goal/achievement/givehug, TRUE)
 		target.update_personal_goal(/datum/goal/achievement/gethug, TRUE)
-
+*/
 /datum/species/proc/add_base_auras(mob/living/carbon/human/H)
 	if(base_auras)
 		for(var/type in base_auras)

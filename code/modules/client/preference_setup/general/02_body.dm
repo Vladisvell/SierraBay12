@@ -541,6 +541,11 @@ var/global/list/valid_bloodtypes = list("A+", "A-", "B+", "B-", "AB+", "AB-", "O
 					choice_options -= "Prosthesis"
 				//[/SIERRA-ADD]
 
+				//[SIERRA-ADD] - XENO WHITELIST
+				if((!whitelist_lookup(SPECIES_FBP, user.ckey) && current_species.name != SPECIES_IPC) && !user.client.holder)
+					choice_options -= "Prosthesis"
+				//[/SIERRA-ADD]
+
 		var/new_state = tgui_input_list(user, "What state do you wish the limb to be in?", "Limb", choice_options)
 		if(!new_state || !CanUseTopic(user)) return TOPIC_NOACTION
 
