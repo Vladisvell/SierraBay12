@@ -155,6 +155,11 @@
 			return S
 	return null
 
+/mob/Login()
+	..()
+	if(ability_master)
+		ability_master.update_abilities(1, src)
+		ability_master.toggle_open(1)
 
 /mob/Initialize()
 	. = ..()
